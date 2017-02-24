@@ -2,23 +2,12 @@
 #  simple ruby script at 
 #  gist.github.com/juliojgarciaperez/31ccb391cb1fbcb04dc86a16038fca24
 
-#for inquiries pertaining to the legality and implications of running this program, contact lieber.asher@gmail.com
-#this piece of code is unlawful according to the terms and conditions of tinder and it's api usage guidelines - use responsibly and at your own risk
-
-#TODO
-#add functionality that checks if friend is in a relationship based on the graph api
-
 import requests
 import json
 import math
 
-
-#auth_filename = "auth_david.json" #david's
-#auth_filename = "auth_asher.json" #asher's 
-#auth.json contains facebook authentication token and facebook user id in json
-#auth_filename = "auth_max.json" #max's tinder
-auth_filename = "auth_boaz.json" #boaz's tinder
-#auth_filename = "auth_mike.json" #mike's
+#nothing will work without a json file containing fb_id and tinder fb token
+#auth_filename = "_____.json" #mike's
 
 class User(object):
 	def __init__(self):
