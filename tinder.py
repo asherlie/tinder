@@ -20,29 +20,15 @@ import math
 auth_filename = "auth_boaz.json" #boaz's tinder
 #auth_filename = "auth_mike.json" #mike's
 
-#if i make this class in another file, i can use one instance of tinder()
 class User(object):
-#	def __init__(self, _id):
 	def __init__(self):
-#		t = Tinder()
 		self.photos = []
-#		self.bio = t.get_tinder_profile(_id)['bio']
 		self.bio = ''
 		self.birthday = ''
-#		self.facial_attributes = 
-#		self.matches = []
-#		match = t._post('updates').json()['matches']
-#		for usr in match:
-#			self.matches.append(User(usr['_id']))
-#		p = t.get_tinder_profile(_id)
-#		for pic in p['photos']:
-#			self.photos.append(pic['url'])
+
 class Tinder(object):
 
 	base = "https://api.gotinder.com/"
-	# with a post to base/user/ping after authed, with the json body: 
-	# "lat": "",
-	# "lon": ""
 
 	def __init__(self):
 		self.headers = {#check if these are the current headers for most updated version of tinder
@@ -428,77 +414,6 @@ class Tinder(object):
 		for pic in user['photos']:
 			print(pic['url'])
 
-	def get_surrounding_tinder_ids(self, check):
-
-		#this for loop is so that it repeats ten times, actually getting EVERY surrounding person.wait this is so fucking stupid. there's no guarantee to how may recs u get per api call. figure this shit out
-		# maybe make it while request.response == 200
-		for num in range(10):
-		#while len(result) > something, or i could try if results not in something idk ill make it work
- 
-
-			request = self._get("user/recs")
-		# print(request.json)
-			if request.status_code != 200:
-				print("requesting surrounding tinder ppl didnt work")
-			rec_data = request.json()
-					#GET RID OF [1:]. i can replace it w/ if "user" not in result
-			for result in rec_data["results"][1:]:
-				#this was causing errosrs, so if theres no user
-				#just skip this loop.
-				#this is why i did the 1: 
-				if "user" not in result:
-					continue
-			# temp_tid = result["user"]["_id"]
-			# temp = self._get("like/" + str(temp_tid)
-			# print(temp.status_code)
-
-			# print(self.like(result["user"]["_id"]))
-
-			# print("like completed with status code " + str(temp.status_code))
-				# print("yooo")				
-			
-
-				#COMMENTED THE CHUNK ABOUT SCHOOLS OUT>. I REALIZED I DONT CARE. ITS ALL ABOUT MUTUAL FRIENDS
-		#		if len(result["user"]["common_friends"]) > 0:
-		#			continue
-			#COMMENTED OUT THE ABOVE FOR SCANNING EVERYONE AROUND ME	
-
-				# if len(result["user"]["schools"]) > 0:
-				# # if [0] in result["user"]["schools"]:
-				# #opted out of this elegant solution for one that actually works above
-				# 	# print(result["user"]["schools"][0]["id"])
-				# 	if result["user"]["schools"][0]["id"] == "8447447859":
-				# 		#this rules out everyone who def goes here
-				# 		# print(result["user"]["name"] + " definitely goes to UB. Swiping left")
-				# 		# elim = elim + 1
-				# 		#implement something that says how many people elimenated beacuse of school each iteration
-				# 		#if they go to my school's ID, next iteration
-				# 		continue
-				# 		# print("ubuff")
-
-				# # if [0] not in result["user"]["schools"]:
-				# #the below works better than ^ 
-				# if len(result["user"]["schools"]) == 0:
-				# 	#this rules out everyone who could possibly go here, because they dont list a school
-				# 	# print(result["user"]["name"] + " possibly goes to UB. Swiping left")
-				# 	continue
-				
-				# # if 0 not in result["user"]["schools"]:
-				# #	 print("no zero, about to fail")
-
-
-
-				self.surrounding.add(result["user"]["_id"])
-				if check == "v":
-					print(result["user"]["_id"])
-		return self.surrounding
-
-	def like_all_surrounding(self):
-		self.get_surrounding_tinder_ids("c")
-		for tid in self.surrounding:
-			response = self.like(tid)
-			if response['match']:
-				print('matched with some girl!')
 
 	def get_tinder_profile(self, tid):
 		if len(tid) != 24: 
