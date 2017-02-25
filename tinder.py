@@ -407,7 +407,7 @@ class Tinder(object):
 
 
 	def get_tinder_profile(self, tid):
-		if len(tid) != 24: 
+		if len(tid) != 24: #noticed that some early tids have a diff amount of digits - look into this more later
 			print("not even going to bother authenticating with a bullshit tid like that")
 			return -1
 		profile_data = self._get("user/" + tid).json()
