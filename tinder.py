@@ -7,7 +7,7 @@ import json
 import math
 
 #nothing will work without a json file containing fb_id and tinder fb token
-#auth_filename = "_____.json" #mike's
+auth_filename = "auth.json"
 
 class User(object):
 	def __init__(self):
