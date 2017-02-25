@@ -21,7 +21,7 @@ class Tinder(object):
 	base = "https://api.gotinder.com/"
 
 	def __init__(self):
-		self.headers = {#check if these are the current headers for most updated version of tinder
+		self.headers = {#check if these are the current headers for most updated version of tinder - almost definitely outdated 
 			"User-Agent": "Tinder/5.3.2 (iPhone; iOS 9.3.2; Scale/2.00",
 			"Accept-Language": "en-US",
 			"host": "api.gotinder.com",
