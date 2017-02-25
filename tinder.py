@@ -4,7 +4,8 @@
 
 import requests
 import json
-import math
+#import math #used to calculate eye distance and standard deviations
+							#moved inport into add_face_data()
 
 #nothing will work without a json file containing fb_id and tinder fb token
 auth_filename = "auth.json"
@@ -92,6 +93,7 @@ class Tinder(object):
 
 	def add_face_data(self, match_profile):
 		denom = len(match_profile)
+		#are these imports bad form?
 		import face
 		import math
 		f = face.Face()
@@ -174,7 +176,7 @@ class Tinder(object):
 				for msg in i.messages:
 					if (msg['message'].find(pn) != -1) or (msg['message'].find('snapchat') != -1):
 						li.append(i)
-						break
+						break #wat?
 		return li
 	def add_stats_data(self, match_profile):
 #TODO
