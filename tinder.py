@@ -2,12 +2,12 @@
 #  simple ruby script at 
 #  gist.github.com/juliojgarciaperez/31ccb391cb1fbcb04dc86a16038fca24
 
+
 import requests
 import json
-#import math #used to calculate eye distance and standard deviations
-							#moved inport into add_face_data()
+import math #used to calculate eye distance and standard deviations moved inport into add_face_data()
 
-#nothing will work without a json file containing fb_id and tinder fb token
+
 auth_filename = "auth.json"
 
 class User(object):
@@ -21,7 +21,7 @@ class Tinder(object):
 	base = "https://api.gotinder.com/"
 
 	def __init__(self):
-		self.headers = {#check if these are the current headers for most updated version of tinder - almost definitely outdated 
+		self.headers = {#check if these are the current headers for most updated version of tinder - almost definitely outdated
 			"User-Agent": "Tinder/5.3.2 (iPhone; iOS 9.3.2; Scale/2.00",
 			"Accept-Language": "en-US",
 			"host": "api.gotinder.com",
@@ -53,6 +53,8 @@ class Tinder(object):
 		#common_friend_count ??? 
 					if 'person' in i:
 						temp = User()
+						temp.anal = 0 #face has not been anal yet
+						temp.mus = 0 #mus has not yet been added
 						if 'created_date' in i:
 							temp.match_date = i['created_date']
 						else:
@@ -77,6 +79,8 @@ class Tinder(object):
 			else: #if not from post('updates').json()['matches']
 				for i in m:
 					temp = User()
+					temp.anal = 0 #face has not been anal yet
+					temp.mus = 0 #mus has not been added yet
 					temp._id = i['_id']
 					temp.bio = i['bio']
 					temp.name = i['name']
@@ -93,92 +97,101 @@ class Tinder(object):
 
 	def add_face_data(self, match_profile):
 		denom = len(match_profile)
-		#are these imports bad form?
 		import face
 		import math
 		f = face.Face()
 		c = 0
 		for match in match_profile:
-			pic_with_one = False #this var should be true iff there exists a photo with one subject
-			pic_num = 0
-			face_count = -1 #before facial anal
-			list_faces = [] #later add all faces to this, then analyze them. i can do more complex
-			for pic in match.photos: # analysis this way. like checking for conflicting genders to narrow it down
-				pic_num+= 1
-				temp_face = f.anal(pic)
-				if 'face' in temp_face:		
-					face_count = len(temp_face['face'])
-					if face_count == 1:
-						match.facial_attributes = temp_face #if there's on face in this pic. use it
-						match.photo_used = pic_num
-						pic_with_one = True 
-						print('photo number ' + str(pic_num) + ' for _id ' + str(match._id) + ' has just one subject.')
-						break 
-					else:
-				#get rid of this else. just put print the num of faces and if else print some other shit
-						print('photo number ' + str(pic_num) + ' for _id ' + str(match._id) + ' had ' + str(face_count) + ' subjects. Trying next photo')
- 
-			
-			if not pic_with_one:
-				print('no photos found with just one subject. Defaulting to first photo')
-				match.facial_attributes = f.anal(match.photos[0]) #default to pic #1 if there is no photo w one subject
-				match.photo_used = 1	# later i'll check if there is any pic in which all but one subject is the wrong gender
-			c = c + 1
-			print(str(c) + '/' +str(denom) + ' face scans completed')
-		print('facial attribute scan completed. now analyzing data')
-			#the line below is the division between expensive scans and cheap analysis
-		# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		for match in match_profile:
-			if 'face' in match.facial_attributes:
-#				match.has_face = True
-				match.f_num = len(match.facial_attributes['face'])
-				if match.f_num > 0:
-					match.has_face = True
-				else:
-					match.has_face = False
-
-				if match.f_num == 1:
-		#face_gender will be inaccurate bc 0 and 1 are switched between tinder's api and f++
-					match.face_gender = match.facial_attributes['face'][0]['attribute']['race']['value']
-					match.face_gender_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
-					match.race = match.facial_attributes['face'][0]['attribute']['race']['value']
-					match.race_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
-					match.face_age = match.facial_attributes['face'][0]['attribute']['age']['value']
-					match.face_age_range = match.facial_attributes['face'][0]['attribute']['age']['range']
-#gross looking line below is just the distance formula expressed using the **2 operator
-					raw_eye_dist = math.sqrt((match.facial_attributes['face'][0]['position']['eye_right']['x'] - match.facial_attributes['face'][0]['position']['eye_left']['x'])**2 + (match.facial_attributes['face'][0]['position']['eye_right']['y'] - match.facial_attributes['face'][0]['position']['eye_left']['y'])**2)
-
-					if match.facial_attributes['face'][0]['position']['width'] == match.facial_attributes['face'][0]['position']['height']:
-						match.face_size = match.facial_attributes['face'][0]['position']['width']
-					else:
-						match.face_size = (match.facial_attributes['face'][0]['position']['width']+match.facial_attributes['face'][0]['position']['height'])/2
-#raw eye distance must be adjusted to the scale of the image which is stored in face_size.if width!=height take avg
-					match.eye_dist = raw_eye_dist*100/match.face_size #multiply by 100 for more reasonable numbers
+			c+=1 #count moved here to increment for every member of mp
+			if match.anal == 0:
+				match.anal = 1
+				pic_with_one = False #this var should be true iff there exists a photo with one subject
+				pic_num = 0
+				face_count = -1 #before facial anal
+				list_faces = [] #later add all faces to this, then analyze them. i can do more complex
+				for pic in match.photos: # analysis this way. like checking for conflicting genders to narrow it down
+					pic_num+= 1
+					temp_face = f.anal(pic)
+					if 'face' in temp_face:		
+						face_count = len(temp_face['face'])
+						if face_count == 1:
+							match.facial_attributes = temp_face #if there's on face in this pic. use it
+							match.photo_used = pic_num
+							pic_with_one = True 
+							print('photo number ' + str(pic_num) + ' for _id ' + str(match._id) + ' has just one subject.')
+							break #break photo loop
+						else:
+					#get rid of this else. just put print the num of faces and if else print some other shit
+							print('photo number ' + str(pic_num) + ' for _id ' + str(match._id) + ' had ' + str(face_count) + ' subjects. Trying next photo')
+	 
 				
-				else:#later make this else check if any of the other pics have just 1 subject
-	#this else handles items with more than one face
-#					if match.f_num > 1:#if there are multiple faces, check for num of pics.
-#						for i in #wont need this inner if bc all the things that have a big fnum at this piont should have inconclusive
-					match.race = 'inconclusive'
-					match.face_age = 'inconclusive'
-					match.eye_dist = -1 #idk why but this is not a good criteria -it is. more than one face in teh pic so it cant decide who is the right person
-					match.face_size = -1
-					
-			else:#no faces in first pic!
-				match.has_face = False
-				match.f_num = -1#idk why but this makes sense
+				if not pic_with_one:
+#TODO: do not default to first photo if it has zero subjects
+					print('no photos found with just one subject. Defaulting to first photo')
+					match.facial_attributes = f.anal(match.photos[0]) #default to pic #1 if there is no photo w one subject
+					match.photo_used = 1	# later i'll check if there is any pic in which all but one subject is the wrong gender
+#				c += 1 #moved this increment above the check for match.anal == 0 for an accurate count
+				print(str(c) + '/' +str(denom) + ' face scans completed')
+#			print('facial attribute scan completed. now analyzing data') #moved a few lines below to only print when not yet analyzed
+				#the line below is the division between expensive scans and cheap analysis
+			# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+			if match.anal == 0:
+				print('facial attribute scan completed. now analyzing data')
+				for match in match_profile:
+					if 'face' in match.facial_attributes:
+		#				match.has_face = True
+						match.f_num = len(match.facial_attributes['face'])
+						if match.f_num > 0:
+							match.has_face = True
+						else:
+							match.has_face = False
+
+						if match.f_num == 1:
+				#face_gender will be inaccurate bc 0 and 1 are switched between tinder's api and f++
+							match.face_gender = match.facial_attributes['face'][0]['attribute']['race']['value']
+							match.face_gender_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
+							match.race = match.facial_attributes['face'][0]['attribute']['race']['value']
+							match.race_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
+							match.face_age = match.facial_attributes['face'][0]['attribute']['age']['value']
+							match.face_age_range = match.facial_attributes['face'][0]['attribute']['age']['range']
+		#gross looking line below is just the distance formula expressed using the **2 operator
+							raw_eye_dist = math.sqrt((match.facial_attributes['face'][0]['position']['eye_right']['x'] - match.facial_attributes['face'][0]['position']['eye_left']['x'])**2 + (match.facial_attributes['face'][0]['position']['eye_right']['y'] - match.facial_attributes['face'][0]['position']['eye_left']['y'])**2)
+
+							if match.facial_attributes['face'][0]['position']['width'] == match.facial_attributes['face'][0]['position']['height']:
+								match.face_size = match.facial_attributes['face'][0]['position']['width']
+							else:
+								match.face_size = (match.facial_attributes['face'][0]['position']['width']+match.facial_attributes['face'][0]['position']['height'])/2
+		#raw eye distance must be adjusted to the scale of the image which is stored in face_size.if width!=height take avg
+							match.eye_dist = raw_eye_dist*100/match.face_size #multiply by 100 for more reasonable numbers
+						
+						else: # TODO: check if any photo has multiple faces with only one subject of the correct gender
+			#this else handles items with more than one face
+							match.race = 'inconclusive'
+							match.face_age = 'inconclusive'
+							match.eye_dist = -1 #idk why but this is not a good criteria -it is. more than one face in teh pic so it cant decide who is the right person
+							match.face_size = -1
+							
+					else:#no faces in first pic!
+						match.has_face = False
+						match.f_num = -1#idk why but this makes sense
+			else:
+				print('skipped over already scanned user')
 		return match_profile
 
 	def top_mp(self, mp, pn):
 		li = []
 		for i in mp:
 			if hasattr(i, 'messages'):
+				if len(i.messages) >= 100:
+					li.append(i)
 				for msg in i.messages:
 					if (msg['message'].find(pn) != -1) or (msg['message'].find('snapchat') != -1):
 						li.append(i)
-						break #wat?
+						break
 		return li
+
 	def add_stats_data(self, match_profile):
+				
 #TODO
 	#add generated stats to a tinder user object just for stats
 	#including race proportions, standard dev for set, mean e_d
@@ -219,6 +232,37 @@ class Tinder(object):
 			#calc standard deviation. add points for each sd away from mean it is	
 			# gen list of tinder use objects based on all surrounding people until recs exhausted
 		return match_profile
+	
+	def add_music_data(self, match_profile): #this is in a separate method bc it's inneficient in that it re - get_tinder_prof() every user. data not stored in list of matches
+		denom = len(match_profile)
+		c=0
+		for i in match_profile:
+			if i.mus == 0: #mus will be 1 if user has been checked for music already
+				i.mus = 1
+				c+=1
+				temp_prof = self.get_tinder_profile(i._id)
+				if 'spotify_theme_track' in temp_prof:
+					i.anthem = {'artist': temp_prof['spotify_theme_track']['artists'][0]['name'], 'name': temp_prof['spotify_theme_track']['name']} #make it work for multiple artists 
+				print(str(c) + '/' +str(denom) + ' music data added') #add more meaningful output that distinguishes between success and failure
+			else:
+				c+=1
+				print('skipping. music already added for this user.')
+		return match_profile
+	
+	def gen_mus_profile(self, match_profile):
+		mu_p = {}
+		for i in match_profile:
+			if hasattr(i, 'anthem'):
+				if not i.anthem['artist'] in mu_p:
+					mu_p[i.anthem['artist']] = {}
+				if not i.anthem['name'] in mu_p[i.anthem['artist']]:
+#					mu_p[i.anthem['artist']][i.anthem['name']] = 0
+					mu_p[i.anthem['artist']][i.anthem['name']] = []
+				#mu_p[i.anthem['artist']][i.anthem['name']] +=1 #increment song
+				mu_p[i.anthem['artist']][i.anthem['name']].append(i) #increment song
+		return mu_p
+
+			
 	def export_match_profile(self, match_profile, filename):
 		j_file = []
 	
@@ -257,13 +301,31 @@ class Tinder(object):
 					u.append(i)
 		return u
 
-#	def update_match_profile(self, mp):
-#		m = self._post('updates').json()['matches']
-#		for i in m:
-#			if 'person' in m:
-#				for j in mp:
-#					if ilkweiodsklwedsweds
-				
+	def update_match_profile(self, mp): # i can improve this method to have it more in line with the capabilities of my others if i let this take a second param that has a new list with some items to add 
+		if len(mp) == 0:
+			print('empty mp error')
+			return mp
+		checker = {}#add the new then the old, all that are left with zeros are new matches
+		m = self._post('updates').json()['matches']
+		for i in m:
+			if 'person' in i:
+				checker[i['person']['_id']] = 0
+		for i in mp:
+			if i._id in checker:# i need to check in case of people who unmatched
+				checker[i._id]+=1
+		new = []
+		for i in checker: #this collection of loops creates a list in the correct format to generate an mp
+			if checker[i] == 0: #if new match
+				for j in m:
+					if 'person' in j:
+						if i == j['person']['_id']:
+							new.append(j)
+#		mp.append(self.gen_match_profile(new)) #THIS DOESN'T WORK. IT'S APPENDING A LIST OF A LIST OF ALL THE NEW ELEMENTS, THEREBY ONLY ADDING ONE NEW ELEM
+		for i in self.gen_match_profile(new):
+			mp.append(i)
+			
+		return mp
+
 	def scan_for_emptiness(self, match_profile):
 		u = []
 		for i in match_profile:
@@ -405,15 +467,16 @@ class Tinder(object):
 		for pic in user['photos']:
 			print(pic['url'])
 
-
 	def get_tinder_profile(self, tid):
-		if len(tid) != 24: #noticed that some early tids have a diff amount of digits - look into this more later
+		if len(tid) != 24: 
 			print("not even going to bother authenticating with a bullshit tid like that")
 			return -1
 		profile_data = self._get("user/" + tid).json()
-		if not 'results' in profile_data:
+		if not 'results' in profile_data: #add more descriptive error message
 			print("fuck off. there's no way this is a valid tid (this error message comes from tinder.py:Tinder:get_tinder_profile)")
-			return -1
+#			return -1 #this is problematic for add_music_data() bc i try to check for a dict item for a value and this sometimes returns int
+			return {} #my hacky solution is to return empty {} - might break other shit idk
+
 		#commented below out for cleaner output for parsing json
 		#print(profile_data["name"] + "'s profile: "  + profile_data["bio"])
 		return profile_data['results']
