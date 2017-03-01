@@ -36,6 +36,7 @@ class Tinder(object):
 		self.authed = False
 		self.profiles = None
 		self.surrounding = set()
+
 	def friends_to_list(self, fl):
 		m = []
 		c = 0
@@ -148,10 +149,16 @@ class Tinder(object):
 #				c += 1 #moved this increment above the check for match.anal == 0 for an accurate count
 				print(str(c) + '/' +str(denom) + ' face scans completed')
 #			print('facial attribute scan completed. now analyzing data') #moved a few lines below to only print when not yet analyzed
+		return match_profile #this will be where i return once separated
 				#the line below is the division between expensive scans and cheap analysis
-			# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+			# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  - the two are totally independent. a new loop starts below
+
+			#maybe make these two different functions - also get rid of the checks like match.anal or match.mus. i could change teh way i update my mp's by 
+			#after these are separate, rerun it bc i redefined some of the values
+			#preforming my data creation shit on them and then merging the old and new lists afterwards. 
 ##			if match.anal == 0:
 #			match.anal = 1
+	def analyze_face_data(self, match_profile):
 		print('facial attribute scan completed. now analyzing data')
 		for match in match_profile:
 			if match.anal == 0:
@@ -166,8 +173,8 @@ class Tinder(object):
 
 					if match.f_num == 1:
 			#face_gender will be inaccurate bc 0 and 1 are switched between tinder's api and f++
-						match.face_gender = match.facial_attributes['face'][0]['attribute']['race']['value']
-						match.face_gender_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
+						match.face_gender = match.facial_attributes['face'][0]['attribute']['gender']['value']
+						match.face_gender_confidence = match.facial_attributes['face'][0]['attribute']['gender']['confidence']
 						match.race = match.facial_attributes['face'][0]['attribute']['race']['value']
 						match.race_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
 						match.face_age = match.facial_attributes['face'][0]['attribute']['age']['value']
@@ -319,30 +326,44 @@ class Tinder(object):
 					u.append(i)
 		return u
 
-	def update_match_profile(self, mp): # i can improve this method to have it more in line with the capabilities of my others if i let this take a second param that has a new list with some items to add 
+#change name to new match_mp - doesn't update within this method. then i could
+#get rid of the vars like match.anal and .mus
+#or make this separate_unique_members(mp1,mp2)
+	def separate_unique_members(self, m_l, mp_s): #large and small
+	#this takes in complete update dlist of matches and current mp 
+#	def update_match_profile(self, mp): # i can improve this method to have it more in line with the capabilities of my others if i let this take a second param that has a new list with some items to add 
+
 	#def update_match_profile(self, mp, addition_mp):
-		if len(mp) == 0:
-			print('empty mp error')
-			return mp
+#		if len(mp1) == 0:
+#			print('empty mp error')
+#			return mp
 		checker = {}#add the new then the old, all that are left with zeros are new matches
-		m = self._post('updates').json()['matches']
-		for i in m:
+#		m = self._post('updates').json()['matches']
+		for i in m_l:
 			if 'person' in i:
 				checker[i['person']['_id']] = 0
-		for i in mp:
+		for i in mp_s:
 			if i._id in checker:# i need to check in case of people who unmatched
 				checker[i._id]+=1
 		new = []
 		for i in checker: #this collection of loops creates a list in the correct format to generate an mp
 			if checker[i] == 0: #if new match
-				for j in m:
+				for j in m_l:
 					if 'person' in j:
 						if i == j['person']['_id']:
 							new.append(j)
-#		mp.append(self.gen_match_profile(new)) #THIS DOESN'T WORK. IT'S APPENDING A LIST OF A LIST OF ALL THE NEW ELEMENTS, THEREBY ONLY ADDING ONE NEW ELEM
-		for i in self.gen_match_profile(new):
+#		for i in self.gen_match_profile(new):
+#			mp.append(i)
+			#i can make this function return new_mp
+		return new			
+#		return mp
+
+	def update_mp(self,mp):
+		m=self._post('updates').json()['matches']
+		new = self.add_music_data(self.analyze_face_data(self.add_face_data(self.gen_match_profile(self.separate_unique_members(m, mp)))))
+		for i in new:
 			mp.append(i)
-			
+		self.add_stats_data(mp)
 		return mp
 
 	def scan_for_emptiness(self, match_profile):
