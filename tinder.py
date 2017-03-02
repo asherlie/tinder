@@ -8,7 +8,7 @@ import json
 import math #used to calculate eye distance and standard deviations moved inport into add_face_data()
 
 
-auth_filename = "auth.json"
+auth_filename = 'auth.json'
 
 class User(object):
 	def __init__(self):
@@ -32,7 +32,8 @@ class Tinder(object):
 			# "Content-Type": "application/json"
 
 		}
-		self._load_fb_auth()
+		if 'auth_filename' in self.__dir__(): #if auth filename declared - if no auth_filename, override_auth_file() must be called
+			self._load_fb_auth() 
 		self.authed = False
 		self.profiles = None
 		self.surrounding = set()
@@ -172,8 +173,11 @@ class Tinder(object):
 						match.has_face = False
 
 					if match.f_num == 1:
-			#face_gender will be inaccurate bc 0 and 1 are switched between tinder's api and f++
 						match.face_gender = match.facial_attributes['face'][0]['attribute']['gender']['value']
+						if match.face_gender == 'Male':
+							match.face_gender = 0
+						else:
+							match.face_gender = 1
 						match.face_gender_confidence = match.facial_attributes['face'][0]['attribute']['gender']['confidence']
 						match.race = match.facial_attributes['face'][0]['attribute']['race']['value']
 						match.race_confidence = match.facial_attributes['face'][0]['attribute']['race']['confidence']
@@ -364,6 +368,7 @@ class Tinder(object):
 		for i in new:
 			mp.append(i)
 		self.add_stats_data(mp)
+		print('added ' + str(len(new)) + ' new matches')
 		return mp
 
 	def scan_for_emptiness(self, match_profile):
@@ -396,6 +401,8 @@ class Tinder(object):
 
 		return req
 
+	def override_auth_file(self,fb_id, fb_tok):
+		self.fb_auth = {'facebook_id': fb_id, 'facebook_token':fb_tok}
 
 	def _authenticate_facebook(self):
 		print("trying to authenticate facebook")
