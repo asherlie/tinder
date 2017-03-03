@@ -32,7 +32,7 @@ class Tinder(object):
 			# "Content-Type": "application/json"
 
 		}
-		if 'auth_filename' in self.__dir__(): #if auth filename declared - if no auth_filename, override_auth_file() must be called
+		if 'auth_filename' in globals(): #if auth filename declared - if no auth_filename, override_auth_file() must be called
 			self._load_fb_auth() 
 		self.authed = False
 		self.profiles = None
