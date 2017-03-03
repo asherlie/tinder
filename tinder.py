@@ -128,7 +128,7 @@ class Tinder(object):
 				list_faces = [] #later add all faces to this, then analyze them. i can do more complex
 				for pic in match.photos: # analysis this way. like checking for conflicting genders to narrow it down
 					pic_num+= 1
-					temp_face = f.anal(pic)
+					temp_face = f.anal(pic).json()
 					if 'face' in temp_face:		
 						face_count = len(temp_face['face'])
 						if face_count == 1:
@@ -145,7 +145,7 @@ class Tinder(object):
 				if not pic_with_one:
 #TODO: do not default to first photo if it has zero subjects
 					print('no photos found with just one subject. Defaulting to first photo')
-					match.facial_attributes = f.anal(match.photos[0]) #default to pic #1 if there is no photo w one subject
+					match.facial_attributes = f.anal(match.photos[0]).json() #default to pic #1 if there is no photo w one subject
 					match.photo_used = 1	# later i'll check if there is any pic in which all but one subject is the wrong gender
 #				c += 1 #moved this increment above the check for match.anal == 0 for an accurate count
 				print(str(c) + '/' +str(denom) + ' face scans completed')
@@ -622,4 +622,3 @@ class Tinder(object):
 			if request.json()['match']:
 				print("it's a match!!!")
 		return request
-
