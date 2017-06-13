@@ -291,6 +291,26 @@ class Tinder(object):
 				mu_p[i.anthem['artist']][i.anthem['name']].append(i) #increment song
 		return mu_p
 
+         def cons_mus_profile(self, mus_p):
+                 ret = {}
+                 for i in mus_p:
+                         ret[i] = []
+                         for j in mus_p[i]: 
+                                 for x in mus_p[i][j]:
+                                         ret[i].append(x)
+                 return ret
+
+         def mus_prof_anal(self, mp):
+             mmp = self.cons_mus_profile(self.gen_mus_profile(mp))
+             ret = {}
+             for i in mmp:
+                 whi = {'White': 0, 'Asian': 0, 'Black': 0, 'inconclusive': 0}
+                 for j in mmp[i]:
+                     if hasattr(j, 'race'):
+                         whi[j.race]+=1
+                 ret[i] = max(whi)
+             return ret
+
 			
 	def export_match_profile(self, match_profile, filename):
 		j_file = []
@@ -469,6 +489,7 @@ class Tinder(object):
 			for user in frnds["results"]:
 				print(user["name"])
 		return frnds
+
 	def frnd_tinder(self, name):
 #		if self.frnd_has_tinder(name) > 1:
 		li = []
