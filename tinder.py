@@ -128,7 +128,10 @@ class Tinder(object):
 				list_faces = [] #later add all faces to this, then analyze them. i can do more complex
 				for pic in match.photos: # analysis this way. like checking for conflicting genders to narrow it down
 					pic_num+= 1
-					temp_face = f.anal(pic).json()
+					temp_face = f.anal(pic)
+                                        if temp_face.status_code != 200: temp_face = {}
+                                        # lol - a shitty fix but 'face' will not be in temp_face so code won't break if pic can't be downloaded
+                                        else: temp_face = temp_face.json()
 					if 'face' in temp_face:		
 						face_count = len(temp_face['face'])
 						if face_count == 1:
