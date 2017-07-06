@@ -424,6 +424,9 @@ class Tinder(object):
 
 		return req
 
+        def get_recs(self):
+                return self._post('user/recs')
+
 	def override_auth_file(self,fb_id, fb_tok):
 		self.fb_auth = {'facebook_id': fb_id, 'facebook_token':fb_tok}
 
@@ -564,7 +567,7 @@ class Tinder(object):
 
 	def like_recs(self, dist):#dist param used in case of groups
 	#very powerful tool when used with location spoofing
-		r = self._get('user/recs').json()['results']
+		r = self._post('user/recs').json()['results']
 #		if r['message'] == 'recs exhauseted':
 			#increase distance by 1-
 		for usr in r:
