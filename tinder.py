@@ -79,7 +79,7 @@ class Tinder(object):
 							#strip messages of ridic amount of useless data before storing. all i need is _id from, _id to
 			#search strip meaningless data. get rid of from and to t_id's. sent and recieved are all i need
 						temp._id = i['person']['_id']
-						temp.bio = i['person']['bio']
+						if 'bio' in i['person']: temp.bio = i['person']['bio']
 						temp.name = i['person']['name']
 						temp.gender = i['person']['gender']
 						temp.birthday = i['person']['birth_date']
@@ -426,6 +426,16 @@ class Tinder(object):
 
         def get_recs(self):
                 return self._post('user/recs')
+
+	def get_bio_list(self, stop_at=-1):
+	    ll = []
+	    while True: 
+		tmp = self.get_recs()
+		if ((stop_at != -1) and (len(ll) >= stop_at)) or tmp.status_code != 200 or 'results' not in tmp.json(): break
+		else: ll += tmp.json()['results']
+		print('scraped ' + str(len(ll))  + ' users so far')
+	    return [i for i in {x['user']['bio']: x for x in ll if 'user' in x and 'bio' in x['user']}] # gets rid of duplicates
+
 
 	def override_auth_file(self,fb_id, fb_tok):
 		self.fb_auth = {'facebook_id': fb_id, 'facebook_token':fb_tok}
