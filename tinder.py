@@ -474,6 +474,43 @@ class Tinder(object):
         def get_recs(self):
                 return self._post('user/recs')
 
+	def get_user_list(self, stop_at=-1):
+	    def expand_user_list(ul):
+		ul_f = []
+		for i in ul:
+		    for usr in i:
+			# dupe check v slow could always just make get_ul return a tuple w/ _id in the first part
+			if 'user' in usr and usr['user']['_id'] not in [x['_id'] for x in ul_f]:
+			    ul_f.append(usr['user'])
+		return ul_f
+	    ll = []
+	    while True:
+		tmp = self.get_recs()
+		if (stop_at != -1 and len(ll) >= stop_at) or tmp.status_code != 200 or 'results' not in tmp.json(): break
+		else: ll.append(tmp.json()['results'])
+		print('scraped ' + str(len(ll)) + ' user clumps so far')
+	    return expand_user_list(ll)
+
+	def update_user_list(self):
+	    ul = self.get_user_list()
+	    old_users = self.writeJson2mem('user_list')
+	    old_len = len(old_users)
+	    old_id = [x['_id'] for x in old_users]
+	    for i in ul:
+		if i['_id'] not in old_id:
+		    old_users.append(i)
+	    self.dump2json(old_users, 'user_list')
+	    print(str(len(old_users)-old_len) + ' users added')
+	    return old_users
+
+	def build_school_prof(self, ul):
+	    ul_s = [i for i in ul if 'schools' in i and i['schools'] != []]
+	    # make it work for all their schools
+	    dic = {x['schools'][0]['name']: [] for x in ul_s}
+	    for i in ul_s:
+		dic[i['schools'][0]['name']].append(i)
+	    return dic
+
         def get_bio_list(self, stop_at=-1):
             ll = []
             while True: 
