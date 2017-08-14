@@ -459,15 +459,26 @@ class Tinder(object):
                 with open(auth_filename) as file:
                         self.fb_auth = json.load(file)
 
-        def update_profile(self, max_distance):
+        def set_gender_pref(self, pref): # 0 for men, 1 for women
+                head = {'gender_filter': pref}
+                if not self.authed:
+                        self._authenticate_facebook()
+                    req = requests.post(self.base + 'profile', headers=self.headers, data=head)
+                    if req.status_code != 200:
+                            print('failed to update gender preference')
+                    else:
+                            print('succesfully updated gender preference!')
+                    return req
+
+        def set_distance_filter(self, max_distance):
                 head = {"distance_filter": max_distance}
                 if not self.authed:
                         self._authenticate_facebook()
                 req = requests.post(self.base + 'profile', headers=self.headers, data=head)
                 if req.status_code != 200:
-                        print("failed to update profile")
+                        print("failed to update profile distance filter")
                 else:
-                        print("succesfully updated profile")
+                        print("succesfully updated distance filter")
 
                 return req
 
@@ -491,6 +502,13 @@ class Tinder(object):
 		print('scraped ' + str(len(ll)) + ' user clumps so far')
 	    return expand_user_list(ll)
 
+        # pretty print
+        def pp(self, usr):
+            print(usr['name'])
+            if 'bio' in usr: print(usr['bio'])
+            for p in usr['photos']:
+                print(p['url'])
+
 	def update_user_list(self):
 	    ul = self.get_user_list()
 	    old_users = self.writeJson2mem('user_list')
@@ -510,6 +528,41 @@ class Tinder(object):
 	    for i in ul_s:
 		dic[i['schools'][0]['name']].append(i)
 	    return dic
+
+        def find_school(self, s_name, school_p):
+            ret = []
+            for i in school_p:
+                if (str(i).upper()).find(s_name.upper()) != -1:
+                    ret.append(i)
+            return ret
+
+        def t_school(self, s_name, school_p):
+            return school_p[self.find_school(s_name, school_p)[0]]
+
+        def users_of_school(self, s_name, school_p, name=-1):
+            for i in self.t_school(s_name, school_p):
+                if (name == -1) or (name != -1 and i['name'].find(name) != -1):
+                    self.pp(i)
+                    print('~~~~~~~~~~~')
+
+        # makes user lists compatible with music profile generation
+        def operate(self, ul):
+            c = 0
+            id_d = {x['_id']: x for x in ul}
+            mp = self.gen_match_profile(ul)
+            for i in mp:
+                if 'spotify_theme_track' in id_d[i._id] and id_d[i._id]['spotify_theme_track'] != None:
+                    temp_prof = id_d[i._id]
+                    print(type(temp_prof))
+                    c+=1
+                    i.has_anthem = True
+                    i.anthem = []
+                    i.anthem.append({'artist': temp_prof['spotify_theme_track']['artists'][0]['name'], 'name': temp_prof['spotify_theme_track']['name']})
+                    i.anthem.append(temp_prof['spotify_theme_track']['uri'])
+                else:
+                    i.has_anthem = False
+            print('found music for ' + str(c) + ' users')
+            return mp
 
         def get_bio_list(self, stop_at=-1):
             ll = []
