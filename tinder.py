@@ -26,8 +26,8 @@ class Tinder(object):
                         "Accept-Language": "en-US",
                         "host": "api.gotinder.com",
                         "Connection": "keep-alive", 
-                        "app-version": 1637,
-                        "os-version": 90000300002,
+                        "app-version": '1637',
+                        "os-version": '90000300002',
                         "platform": "ios",
                         # "Content-Type": "application/json"
 
