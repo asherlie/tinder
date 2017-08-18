@@ -463,12 +463,12 @@ class Tinder(object):
                 head = {'gender_filter': pref}
                 if not self.authed:
                         self._authenticate_facebook()
-                    req = requests.post(self.base + 'profile', headers=self.headers, data=head)
-                    if req.status_code != 200:
-                            print('failed to update gender preference')
-                    else:
-                            print('succesfully updated gender preference!')
-                    return req
+                req = requests.post(self.base + 'profile', headers=self.headers, data=head)
+                if req.status_code != 200:
+                        print('failed to update gender preference')
+                else:
+                        print('succesfully updated gender preference!')
+                return req
 
         def set_distance_filter(self, max_distance):
                 head = {"distance_filter": max_distance}
@@ -534,13 +534,13 @@ class Tinder(object):
             for p in usr['photos']:
                 print(p['url'])
 
-	def build_school_prof(self, ul):
-	    ul_s = [i for i in ul if 'schools' in i and i['schools'] != []]
-	    # make it work for all their schools
-	    dic = {x['schools'][0]['name']: [] for x in ul_s}
-	    for i in ul_s:
-		dic[i['schools'][0]['name']].append(i)
-	    return dic
+        def build_school_prof(self, ul):
+            ul_s = [i for i in ul if 'schools' in i and i['schools'] != []]
+            # make it work for all their schools
+            dic = {x['schools'][0]['name']: [] for x in ul_s}
+            for i in ul_s:
+                dic[i['schools'][0]['name']].append(i)
+            return dic
 
         def find_school(self, s_name, school_p):
             ret = []
