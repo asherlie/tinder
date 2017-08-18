@@ -361,6 +361,16 @@ class Tinder(object):
                  ret[i] = max(whi)
              return ret
 
+        def most_recent_match(self):
+            m = self._post('updates').json()['matches']
+            mr = m[0]
+            mr_d = datetime.datetime.strptime(mr['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            for i in m:
+                if 'created_date' in i: tmp_d = datetime.datetime.strptime(i['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                if tmp_d > mr_d:
+                    mr = i
+                    mr_d = tmp_d
+            return mr
                         
         def export_match_profile(self, match_profile, filename):
                 j_file = []
