@@ -98,7 +98,7 @@ class Tinder(object):
                                                 temp._id = i['_id']
                                         else:
                                                 temp._id = i['user_id']
-                                        temp.bio = i['bio']
+                                        if 'bio' in i: temp.bio = i['bio']
                                         temp.name = i['name']
                                         temp.gender = i['gender']
                                         temp.birthday = i['birth_date']
@@ -539,7 +539,7 @@ class Tinder(object):
             return old_users
         
         def pp(self, usr):
-            if isinstance(usr, tinder.User):
+            if isinstance(usr, User):
                 print(usr.name)
                 if hasattr(usr, 'bio'): print(usr.bio)
                 for p in usr.photos:
