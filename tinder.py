@@ -332,13 +332,13 @@ class Tinder(object):
                 mu_p = {}
                 for i in match_profile:
                         if hasattr(i, 'anthem'):
-                                if not i.anthem['artist'] in mu_p:
-                                        mu_p[i.anthem['artist']] = {}
-                                if not i.anthem['name'] in mu_p[i.anthem['artist']]:
+                                if not i.anthem[0]['artist'] in mu_p:
+                                        mu_p[i.anthem[0]['artist']] = {}
+                                if not i.anthem[0]['name'] in mu_p[i.anthem[0]['artist']]:
 #                                       mu_p[i.anthem['artist']][i.anthem['name']] = 0
-                                        mu_p[i.anthem['artist']][i.anthem['name']] = []
+                                        mu_p[i.anthem[0]['artist']][i.anthem[0]['name']] = []
                                 #mu_p[i.anthem['artist']][i.anthem['name']] +=1 #increment song
-                                mu_p[i.anthem['artist']][i.anthem['name']].append(i) #increment song
+                                mu_p[i.anthem[0]['artist']][i.anthem[0]['name']].append(i) #increment song
                 return mu_p
 
         def cons_mus_profile(self, mus_p):
@@ -539,10 +539,16 @@ class Tinder(object):
             return old_users
         
         def pp(self, usr):
-            print(usr['name'])
-            if 'bio' in usr: print(usr['bio'])
-            for p in usr['photos']:
-                print(p['url'])
+            if isinstance(usr, tinder.User):
+                print(usr.name)
+                if hasattr(usr, 'bio'): print(usr.bio)
+                for p in usr.photos:
+                    print(p)
+            else:
+                print(usr['name'])
+                if 'bio' in usr: print(usr['bio'])
+                for p in usr['photos']:
+                    print(p['url'])
 
         def build_school_prof(self, ul):
             ul_s = [i for i in ul if 'schools' in i and i['schools'] != []]
@@ -576,7 +582,6 @@ class Tinder(object):
             for i in mp:
                 if 'spotify_theme_track' in id_d[i._id] and id_d[i._id]['spotify_theme_track'] != None:
                     temp_prof = id_d[i._id]
-                    print(type(temp_prof))
                     c+=1
                     i.has_anthem = True
                     i.anthem = []
@@ -586,6 +591,29 @@ class Tinder(object):
                     i.has_anthem = False
             print('found music for ' + str(c) + ' users')
             return mp
+
+        def find_artist(self, a_name, mus_p):
+            ret = []
+            for i in mus_p:
+                if i.upper().find(a_name.upper()) != -1:
+                    ret.append(i)
+            return ret
+
+        # i need to distinguish between songs? 
+        # maybe write a new funct for song names instead of optional param
+        def t_artist(self, a_name, mus_p):
+            ret = []
+            art =  mus_p[self.find_artist(a_name, mus_p)[0]]
+            # return [art[x] for x in art]
+            for i in art:
+                for j in art[i]:
+                    ret.append(j)
+            return ret
+
+        def users_of_artist(self, a_name, mus_p, name=None, s_name=None):
+            for i in self.t_artist(a_name, mus_p):
+                self.pp(i)
+                print('~~~~~~~~~~~')
 
         def get_bio_list(self, stop_at=-1):
             ll = []
