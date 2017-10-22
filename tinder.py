@@ -697,6 +697,10 @@ class Tinder(object):
         def get_my_prof(self):
                 return self._get('profile')
 
+        def get_my_location(self):
+                prof = self.get_my_prof().json()
+                return prof['pos_info']['city']['name']+ ', ' + prof['pos_info']['country']['name']
+
         def get_friends(self, check):
                 if not self.authed:
                         self._authenticate_facebook()
