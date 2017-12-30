@@ -373,17 +373,20 @@ class Tinder(object):
                     mr_d = tmp_d
             return mr
 
-        def most_recent_message(self):
+        def most_recently_messaged(self):
             m = self._post('updates').json()['matches']
-            msg = [i['messages'] for i in m if len(i['messages']) != 0]
-            mr_temp = msg[0][len(msg[0])-1]['timestamp']
-            mr_temp = [0, '']
-            for i in msg:
-                tmp_msg = i[len(i)-1]
-                if tmp_msg['timestamp'] >= mr_temp[0]:
-                    mr_temp = [tmp_msg['timestamp'], tmp_msg['message']]
-            return mr_temp[1]
+            mr = [None, -1] # prof, timestamp
+            for i in m:
+                if len(i['messages']) != 0:
+                    for msg in i['messages']:
+                        if msg['timestamp'] >= mr[1]:
+                            mr = [i, msg['timestamp']]
+            return mr[0]
 
+        def most_recent_message(self):
+            mrm = self.most_recently_messaged()
+            return mrm['messages'][len(mrm['messages'])-1]['message']
+    
         def export_match_profile(self, match_profile, filename):
                 j_file = []
         
