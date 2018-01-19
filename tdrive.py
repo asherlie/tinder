@@ -23,11 +23,11 @@ class TinderStorage(object):
         return ret
 
     # TODO store original filename in messages
-    def decrypt(self, raw_data, tmp_fname, out_fname):
+    def decrypt(self, raw_data, tmp_fname, out_fname, pp):
         with open(tmp_fname, 'wb') as f:
             f.write(raw_data)
         with open(tmp_fname, 'rb') as f:
-            self.gpg.decrypt_file(f, output=out_fname)
+            self.gpg.decrypt_file(f, output=out_fname, passphrase=pp)
         os.popen('rm ' + tmp_fname)
     
     def prep_file_for_storage(self, filename, char_lim):
@@ -44,27 +44,23 @@ class TinderStorage(object):
         self.t.send_message(mid, str(len(p_f)))
     
     # TODO: store original filename
-    def load_file(self, mid, out_fname):
+    def load_file(self, mid, out_fname, pgp_pp):
         m = self.t._post('updates').json()['matches']
         for i in m:
             if i['id'] == mid:
                 g = i['messages']
-        # for i in range(len(g), len(g)-int(g[len(g)-1]['message']), -1):
         data_str = ''
-        data = bytes()
-        for i in range(len(g)-int(g[len(g)-1]['message'])-1, len(g)):
+        range_st = len(g)-int(g[len(g)-1]['message'])-1
+        for i in range(range_st, len(g)-1):
             # TODO: handle removal of unneeded b' in store_file
-            clean_msg = g[i]['message'][2::][:-1:]
+            clean_msg = g[i]['message']
+            if i == range_st:
+                clean_msg = clean_msg[2::]
+            if g[i]['message'][len(g[i]['message'])-1] == "'":
+                clean_msg = clean_msg[:-1:]
             data_str += clean_msg
-            # print(bytes(g[i]['message'][2::], 'utf-8'))
-            # print(clean_msg)
-            # data += base64.decodestring(bytes(clean_msg, 'utf-8'))
-            # data += base64.decodestring(bytes(g[i]['message'][2::][:-1:], 'utf-8')) # starts at 2 to avoid " b' "
-        # bytes(a, 'utf-8')
         unb64 = base64.decodestring(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
-        self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname)
-        # self.gpg.
-        # return data_str
+        self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, pgp_pp)
 
     def find_mid(self, name):
         m = self.t._post('updates').json()['matches']
