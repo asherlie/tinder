@@ -6,14 +6,12 @@ import os
 #TODO: define the below to be a further abstraction fo TinderStorage
 # class StorageBlock(object):
     # i want this to be accesible like sb.files = []
-    # sb.tinderstorage.list_files if i give ts a param of messages to use i could avoid this shit
     # def __init__(self):
-        # self.convoG
+        # self.convo
 
 class TinderStorage(object):
     def __init__(self, match, pgp_pp):
         self.pgp_pp = pgp_pp
-        self.recently_updated = True
         self.convo = match['messages']
         self.mid = match['id']
         self.t = tinder.Tinder()
@@ -54,6 +52,9 @@ class TinderStorage(object):
         self.t.send_message(self.mid, to_send)
     
     # TODO: only look at messages sent by user
+    # could be difficult because i'd have to t.get_my_profile
+    # it's kinda important though because otherwise if both users are sending b64 encoded pgp encrypted 
+    # files, there will be many errors when i try to decrypt the pgp meant for another key
 
     def b64_decode_safe(self, strng):
         try:
@@ -64,7 +65,8 @@ class TinderStorage(object):
     def load_file(self, filenum, out_fname):
         data_str = ''
         c = 0
-        for msg in range(len(self.convo)-1, 0, -1):
+        msg = len(self.convo)-1
+        while msg >= 0:
             tmp_decoded = self.b64_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
             if tmp_decoded != -1:
                 tmp_decrypted = self.gpg.decrypt(tmp_decoded, passphrase=self.pgp_pp)
@@ -74,7 +76,7 @@ class TinderStorage(object):
                         o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))+1::]
                         if filenum == c: # if we've gotten to the correct file
                             range_st = msg-n_blocks  # -1 ?
-                            print('loading file from block ' + str(range_st) + ' to ' + str(msg))
+                            print('loading file \'' + o_fname + '\' from block ' + str(range_st) + ' to ' + str(msg))
                             for i in range(range_st, msg):
                                 # TODO: handle removal of unneeded b' in store_file
                                 clean_msg = self.convo[i]['message']
@@ -84,7 +86,11 @@ class TinderStorage(object):
                                     clean_msg = clean_msg[:-1:]
                                 data_str += clean_msg
                             break
+                        # filenum != c but we found a valid descriptor block
+                        else:
+                            msg -= n_blocks
                         c += 1
+            msg -= 1
 
         unb64 = base64.decodestring(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
         self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
@@ -100,11 +106,11 @@ class TinderStorage(object):
                 if tmp_decrypted.data != b'':
                     if tmp_decrypted.data.decode().split(' ')[0].isnumeric():
                         n_blocks = int(tmp_decrypted.data.decode().split(' ')[0])
-                        o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))::]
+                        o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))+1::]
                         print('file ' + str(c) + ': ' + o_fname) 
                         print('occupies ' + str(n_blocks) + ' blocks')
                         c+=1
-                        # ignores the file blocks
+                        # ignores the file blocks, we only care about descriptor blocks
                         msg -= n_blocks
             msg -= 1
 
@@ -113,7 +119,6 @@ class TinderStorage(object):
         for i in m:
             if i['id'] == self.mid:
                 self.convo = i['messages']
-
         
     # TODO: move this into store_file for speed
     def sp(self, st, le):
