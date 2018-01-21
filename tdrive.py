@@ -24,7 +24,7 @@ class TinderStorage(object):
         if keys == []:
             print('please create a pgp key')
         else:
-            print('using ' + keys[0]['uids'][0])
+            print('using pgp key: ' + keys[0]['uids'][0])
             self.key_id = keys[0]['keyid']
 
     def encrypt(self, filename):
@@ -91,21 +91,22 @@ class TinderStorage(object):
 
     def list_files(self):
         c = 0
-        for msg in range(len(self.convo)-1, 0, -1):
+        msg = len(self.convo)-1
+        while msg >= 0:
             tmp_decoded = self.b64_decode_safe(bytes(bytes(self.convo[msg]['message'], 'utf-8').decode('unicode_escape'), 'utf-8'))
             if tmp_decoded != -1:
                 pgp_prep = str(tmp_decoded).encode('utf-8').decode('unicode-escape')[2::][:-1:]
                 tmp_decrypted = self.gpg.decrypt(pgp_prep.encode('utf-8'), passphrase=self.pgp_pp)
                 if tmp_decrypted.data != b'':
-                # TODO: each time i get to this area, decrement my loop counter the number of size thing
-                # TODO: bc its decoding a shitload of stuff each time it sees a message. to do this i'll need
-                # TODO: to use a while loop instead bc python sucks
                     if tmp_decrypted.data.decode().split(' ')[0].isnumeric():
                         n_blocks = int(tmp_decrypted.data.decode().split(' ')[0])
                         o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))::]
                         print('file ' + str(c) + ': ' + o_fname) 
                         print('occupies ' + str(n_blocks) + ' blocks')
                         c+=1
+                        # ignores the file blocks
+                        msg -= n_blocks
+            msg -= 1
 
     def update(self):
         m = self.t._post('updates').json()['matches']
