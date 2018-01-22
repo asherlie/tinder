@@ -42,11 +42,12 @@ class TinderStorage(object):
         file_segments = self.sp(str(base64.encodestring(encrypted_file)), char_lim)
         return file_segments
     
-    def store_file(self, filename):
+    def store_file(self, filename, s_filename=None):
         p_f = self.prep_file_for_storage(filename, 900)
         print('file will be stored in ' + str(len(p_f)) + ' messages')
         for i in p_f:
             self.t.send_message(self.mid, i)
+        if s_filename != None: filename = s_filename
         info_tag = str(len(p_f)) + ' ' + filename
         to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
         self.t.send_message(self.mid, to_send)
