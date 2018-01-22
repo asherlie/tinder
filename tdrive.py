@@ -62,7 +62,7 @@ class TinderStorage(object):
         except ValueError:
             return -1
 
-    def load_file(self, filenum, out_fname):
+    def load_file(self, filenum, out_fname=None):
         data_str = ''
         c = 0
         msg = len(self.convo)-1
@@ -75,6 +75,7 @@ class TinderStorage(object):
                         n_blocks = int(tmp_decrypted.data.decode().split(' ')[0])
                         o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))+1::]
                         if filenum == c: # if we've gotten to the correct file
+                            if out_fname == None: out_fname = o_fname
                             range_st = msg-n_blocks  # -1 ?
                             print('loading file \'' + o_fname + '\' from block ' + str(range_st) + ' to ' + str(msg))
                             for i in range(range_st, msg):
