@@ -66,7 +66,7 @@ class TinderStorage(object):
 
     def load_file(self, filenum, out_fname=None, use_ot=True):
         # TODO: get rid of original implementation - load_file should only be called when there is an offset table
-        def chunk_to_data_str(c_b, c_e, o_fn):
+        def block_range_to_data_str(c_b, c_e, o_fn):
             data_str = ''
             print('loading file \'' + o_fn + '\' from block ' + str(c_b) + ' to ' + str(c_e))
             for i in range(c_b, c_e):
@@ -79,7 +79,8 @@ class TinderStorage(object):
             return data_str
 
         if use_ot and self.offset_table != {}:
-            unb64 = base64.decodestring(bytes(chunk_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
+            if out_fname == None: out_fname = self.offset_table[filenum][0]
+            unb64 = base64.decodestring(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
             self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
             return
         data_str = ''
@@ -96,7 +97,7 @@ class TinderStorage(object):
                         if filenum == c: # if we've gotten to the correct file
                             if out_fname == None: out_fname = o_fname
                             range_st = msg-n_blocks  # -1 ?
-                            data_str = chunk_to_data_str(range_st, msg, o_fname)
+                            data_str = block_range_to_data_str(range_st, msg, o_fname)
                             break
                         # filenum != c but we found a valid descriptor block
                         else:
@@ -140,7 +141,6 @@ class TinderStorage(object):
                 self.convo = i['messages']
         self.list_files(True, False)
         
-    # TODO: move this into store_file for speed
     def sp(self, st, le):
         spl = []
         tmp_str = ''
