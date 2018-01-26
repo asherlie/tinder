@@ -3,12 +3,6 @@ import base64
 import gnupg
 import os
 
-#TODO: define the below to be a further abstraction fo TinderStorage
-# class StorageBlock(object):
-    # i want this to be accesible like sb.files = []
-    # def __init__(self):
-        # self.convo
-
 class TinderStorage(object):
     def __init__(self, match, pgp_pp):
         self.pgp_pp = pgp_pp
@@ -28,7 +22,7 @@ class TinderStorage(object):
 
     def encrypt(self, filename):
         with open(filename, 'rb') as f:
-            ret = self.gpg.encrypt_file(f, self.key_id, armor=False)# output='.tmp_encrypted')
+            ret = self.gpg.encrypt_file(f, self.key_id, armor=False)
         return ret
 
     def decrypt(self, raw_data, tmp_fname, out_fname, pp):
@@ -111,8 +105,7 @@ class TinderStorage(object):
     def list_files(self, silent=False, use_ot=True):
         if use_ot and self.offset_table != {}:
             for i in self.offset_table:
-                print('file ' + str(i) + ': ' + self.offset_table[i][0])
-                print('occupies ' + str(self.offset_table[i][2]-self.offset_table[i][1]) + ' blocks')
+                print('file ' + str(i) + ': \'' + self.offset_table[i][0] + '\' occupies ' + str(self.offset_table[i][2]-self.offset_table[i][1]) + ' blocks')
             return
         c = 0
         msg = len(self.convo)-1
@@ -127,8 +120,7 @@ class TinderStorage(object):
                         o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))+1::]
                         self.offset_table[c] = (o_fname, msg-n_blocks, msg)
                         if not silent:
-                            print('file ' + str(c) + ': ' + o_fname) 
-                            print('occupies ' + str(n_blocks) + ' blocks')
+                            print('file ' + str(c) + ': \'' + o_fname + '\' occupies ' + str(n_blocks) + ' blocks')
                         c+=1
                         # ignores the file blocks, we only care about descriptor blocks
                         msg -= n_blocks
