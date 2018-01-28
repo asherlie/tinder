@@ -13,6 +13,7 @@ class TinderStorage(object):
         self.gpg.encoding = 'utf-8'
         self.key_id = -1
         self.offset_table = {}
+        self.rescan_conv = False
         keys = self.gpg.list_keys()
         if keys == []:
             print('please create a pgp key')
@@ -37,16 +38,20 @@ class TinderStorage(object):
         file_segments = self.sp(str(base64.encodestring(encrypted_file))[2::][:-1:], char_lim)
         return file_segments
     
-    # TODO: when file is stored create temporary fake message-like items so update isn't necessary
     def store_file(self, filename, s_filename=None):
         p_f = self.prep_file_for_storage(filename, 900)
         print('file will be stored in ' + str(len(p_f)) + ' blocks')
         for i in p_f:
             self.t.send_message(self.mid, i)
+            # creating temporary message-like entries in self.convo to avoid self.update()
+            self.convo.append({'message': i})
         if s_filename != None: filename = s_filename
         info_tag = str(len(p_f)) + ' ' + filename
         to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
         self.t.send_message(self.mid, to_send)
+        self.convo.append({'message': to_send})
+        # offset_table will be overwritten next time list_files is called
+        self.rescan_conv = True
     
     # TODO: only look at messages sent by user
     # could be difficult because i'd have to t.get_my_profile
@@ -104,7 +109,7 @@ class TinderStorage(object):
         self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
 
     def list_files(self, silent=False, use_ot=True):
-        if use_ot and self.offset_table != {}:
+        if not self.rescan_conv and use_ot and self.offset_table != {}:
             for i in self.offset_table:
                 print('file ' + str(i) + ': \'' + self.offset_table[i][0] + '\' occupies ' + str(self.offset_table[i][2]-self.offset_table[i][1]) + ' blocks')
             return
@@ -126,6 +131,7 @@ class TinderStorage(object):
                         # ignores the file blocks, we only care about descriptor blocks
                         msg -= n_blocks
             msg -= 1
+        self.rescan_conv = False
 
     def update(self):
         m = self.t._post('updates').json()['matches']
