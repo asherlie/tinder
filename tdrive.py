@@ -34,9 +34,10 @@ class TinderStorage(object):
     
     def prep_file_for_storage(self, filename, char_lim):
         encrypted_file = self.encrypt(filename).data
-        file_segments = self.sp(str(base64.encodestring(encrypted_file)), char_lim)
+        file_segments = self.sp(str(base64.encodestring(encrypted_file))[2::][:-1:], char_lim)
         return file_segments
     
+    # TODO: when file is stored create temporary fake message-like items so update isn't necessary
     def store_file(self, filename, s_filename=None):
         p_f = self.prep_file_for_storage(filename, 900)
         print('file will be stored in ' + str(len(p_f)) + ' blocks')
@@ -65,7 +66,7 @@ class TinderStorage(object):
             print('loading file \'' + o_fn + '\' from block ' + str(c_b) + ' to ' + str(c_e))
             for i in range(c_b, c_e):
                 clean_msg = self.convo[i]['message']
-                if i == c_b:
+                if i == c_b and clean_msg[:2:] == "b'": 
                     clean_msg = clean_msg[2::]
                 if self.convo[i]['message'][len(self.convo[i]['message'])-1] == "'":
                     clean_msg = clean_msg[:-1:]
