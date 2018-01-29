@@ -13,7 +13,6 @@ class TinderStorage(object):
         self.gpg.encoding = 'utf-8'
         self.key_id = -1
         self.offset_table = {}
-        self.rescan_conv = False
         keys = self.gpg.list_keys()
         if keys == []:
             print('please create a pgp key')
@@ -51,7 +50,12 @@ class TinderStorage(object):
         self.t.send_message(self.mid, to_send)
         self.convo.append({'message': to_send})
         # offset_table will be overwritten next time list_files is called
-        self.rescan_conv = True
+        for i in range(len(self.offset_table), 0, -1):
+            self.offset_table[i] = self.offset_table[i-1]
+        prev_end = -1
+        if len(self.offset_table) > 1:
+            prev_end = self.offset_table[1][2]
+        self.offset_table[0] = (filename, prev_end+1, len(p_f)+prev_end+1)
     
     # TODO: only look at messages sent by user
     # could be difficult because i'd have to t.get_my_profile
@@ -109,7 +113,7 @@ class TinderStorage(object):
         self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
 
     def list_files(self, silent=False, use_ot=True):
-        if not self.rescan_conv and use_ot and self.offset_table != {}:
+        if use_ot and self.offset_table != {}:
             for i in self.offset_table:
                 print('file ' + str(i) + ': \'' + self.offset_table[i][0] + '\' occupies ' + str(self.offset_table[i][2]-self.offset_table[i][1]) + ' blocks')
             return
@@ -131,7 +135,6 @@ class TinderStorage(object):
                         # ignores the file blocks, we only care about descriptor blocks
                         msg -= n_blocks
             msg -= 1
-        self.rescan_conv = False
 
     def update(self):
         m = self.t._post('updates').json()['matches']
