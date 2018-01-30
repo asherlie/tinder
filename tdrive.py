@@ -34,11 +34,18 @@ class TinderStorage(object):
     
     def prep_file_for_storage(self, filename, char_lim):
         encrypted_file = self.encrypt(filename).data
-        file_segments = self.sp(str(base64.encodestring(encrypted_file))[2::][:-1:], char_lim)
+        # file_segments = self.sp(str(base64.encodestring(encrypted_file))[2::][:-1:], char_lim)
+        file_segments = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], char_lim)
         return file_segments
+
+    def prep_file_for_storage_b85(self, filename, char_lim):
+        encrypted_file = self.encrypt(filename).data
+        fs = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], char_lim)
+        return fs
     
     def store_file(self, filename, s_filename=None):
-        p_f = self.prep_file_for_storage(filename, 900)
+        # p_f = self.prep_file_for_storage(filename, 900)
+        p_f = self.prep_file_for_storage_b85(filename, 900)
         print('file will be stored in ' + str(len(p_f)) + ' blocks')
         for i in p_f:
             self.t.send_message(self.mid, i)
@@ -46,7 +53,8 @@ class TinderStorage(object):
             self.convo.append({'message': i})
         if s_filename != None: filename = s_filename
         info_tag = str(len(p_f)) + ' ' + filename
-        to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
+        # to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
+        to_send = str(base64.b85encode(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
         self.t.send_message(self.mid, to_send)
         self.convo.append({'message': to_send})
         # offset_table will be overwritten next time list_files is called
@@ -62,9 +70,15 @@ class TinderStorage(object):
     # it's kinda important though because otherwise if both users are sending b64 encoded pgp encrypted 
     # files, there will be many errors when i try to decrypt the pgp meant for another key
 
-    def b64_decode_safe(self, strng):
+    def b64_decode_safe(self, byte_str):
         try:
-            return base64.decodestring(strng)
+            return base64.decodestring(byte_str)
+        except ValueError:
+            return -1
+
+    def b85_decode_safe(self, byte_str):
+        try:
+            return base64.b85decode(byte_str)
         except ValueError:
             return -1
 
@@ -84,14 +98,16 @@ class TinderStorage(object):
 
         if use_ot and self.offset_table != {}:
             if out_fname == None: out_fname = self.offset_table[filenum][0]
-            unb64 = base64.decodestring(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
+            # unb64 = base64.decodestring(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
+            unb64 = base64.b85decode(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
             self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
             return
         data_str = ''
         c = 0
         msg = len(self.convo)-1
         while msg >= 0:
-            tmp_decoded = self.b64_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
+            # tmp_decoded = self.b64_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
+            tmp_decoded = self.b85_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
             if tmp_decoded != -1:
                 tmp_decrypted = self.gpg.decrypt(tmp_decoded, passphrase=self.pgp_pp)
                 if tmp_decrypted.data != b'':
@@ -109,7 +125,8 @@ class TinderStorage(object):
                         c += 1
             msg -= 1
 
-        unb64 = base64.decodestring(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
+        # unb64 = base64.decodestring(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
+        unb64 = base64.b85decode(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
         self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
 
     def list_files(self, silent=False, use_ot=True):
@@ -120,7 +137,8 @@ class TinderStorage(object):
         c = 0
         msg = len(self.convo)-1
         while msg >= 0:
-            tmp_decoded = self.b64_decode_safe(bytes(bytes(self.convo[msg]['message'], 'utf-8').decode('unicode_escape'), 'utf-8'))
+            # tmp_decoded = self.b64_decode_safe(bytes(bytes(self.convo[msg]['message'], 'utf-8').decode('unicode_escape'), 'utf-8'))
+            tmp_decoded = self.b85_decode_safe(bytes(bytes(self.convo[msg]['message'], 'utf-8').decode('unicode_escape'), 'utf-8'))
             if tmp_decoded != -1:
                 pgp_prep = str(tmp_decoded).encode('utf-8').decode('unicode-escape')[2::][:-1:]
                 tmp_decrypted = self.gpg.decrypt(pgp_prep.encode('utf-8'), passphrase=self.pgp_pp)
