@@ -333,13 +333,13 @@ class Tinder(object):
                 mu_p = {}
                 for i in match_profile:
                         if hasattr(i, 'anthem'):
-                                if not i.anthem[0]['artist'] in mu_p:
-                                        mu_p[i.anthem[0]['artist']] = {}
-                                if not i.anthem[0]['name'] in mu_p[i.anthem[0]['artist']]:
+                                if not i.anthem['artist'] in mu_p:
+                                        mu_p[i.anthem['artist']] = {}
+                                if not i.anthem['name'] in mu_p[i.anthem['artist']]:
 #                                       mu_p[i.anthem['artist']][i.anthem['name']] = 0
-                                        mu_p[i.anthem[0]['artist']][i.anthem[0]['name']] = []
+                                        mu_p[i.anthem['artist']][i.anthem['name']] = []
                                 #mu_p[i.anthem['artist']][i.anthem['name']] +=1 #increment song
-                                mu_p[i.anthem[0]['artist']][i.anthem[0]['name']].append(i) #increment song
+                                mu_p[i.anthem['artist']][i.anthem['name']].append(i) #increment song
                 return mu_p
 
         def cons_mus_profile(self, mus_p):
