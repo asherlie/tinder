@@ -22,7 +22,7 @@ class TinderStorage(object):
 
     def encrypt(self, filename):
         with open(filename, 'rb') as f:
-            ret = self.gpg.encrypt_file(f, self.key_id, armor=False)
+            ret = self.gpg.encrypt_file(f, self.key_id, armor=False, always_trust=True)
         return ret
 
     def decrypt(self, raw_data, tmp_fname, out_fname, pp):
@@ -54,7 +54,7 @@ class TinderStorage(object):
         if s_filename != None: filename = s_filename
         info_tag = str(len(p_f)) + ' ' + filename
         # to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
-        to_send = str(base64.b85encode(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
+        to_send = str(base64.b85encode(self.gpg.encrypt(info_tag, self.key_id, always_trust=True).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
         self.t.send_message(self.mid, to_send)
         self.convo.append({'message': to_send})
         # offset_table will be overwritten next time list_files is called
