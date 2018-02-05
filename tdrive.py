@@ -34,18 +34,11 @@ class TinderStorage(object):
     
     def prep_file_for_storage(self, filename, char_lim):
         encrypted_file = self.encrypt(filename).data
-        # file_segments = self.sp(str(base64.encodestring(encrypted_file))[2::][:-1:], char_lim)
-        file_segments = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], char_lim)
-        return file_segments
-
-    def prep_file_for_storage_b85(self, filename, char_lim):
-        encrypted_file = self.encrypt(filename).data
         fs = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], char_lim)
         return fs
     
     def store_file(self, filename, s_filename=None):
-        # p_f = self.prep_file_for_storage(filename, 900)
-        p_f = self.prep_file_for_storage_b85(filename, 900)
+        p_f = self.prep_file_for_storage(filename, 900)
         print('file will be stored in ' + str(len(p_f)) + ' blocks')
         for i in p_f:
             self.t.send_message(self.mid, i)
