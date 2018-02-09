@@ -4,7 +4,8 @@ import gnupg
 import os
 
 class TinderStorage(object):
-    def __init__(self, match, pgp_pp):
+    def __init__(self, match, pgp_pp, char_lim=900, pgp_un=None):
+        self.char_lim = char_lim
         self.pgp_pp = pgp_pp
         self.convo = match['messages']
         self.mid = match['id']
@@ -14,11 +15,19 @@ class TinderStorage(object):
         self.key_id = -1
         self.offset_table = {}
         keys = self.gpg.list_keys()
+        key_name = ''
         if keys == []:
             print('please create a pgp key')
         else:
-            print('using pgp key: ' + keys[0]['uids'][0])
-            self.key_id = keys[0]['keyid']
+            for i in keys:
+                if i['keyid'] == pgp_un:
+                    self.key_id = pgp_un
+                    key_name = i['uids'][0]
+            # use first key if specified key does not exist
+            if self.key_id == -1:
+                self.key_id = keys[0]['keyid']
+                key_name = keys[0]['uids'][0]
+            print('using pgp key: ' + key_name)
 
     def encrypt(self, filename):
         with open(filename, 'rb') as f:
@@ -32,13 +41,16 @@ class TinderStorage(object):
             self.gpg.decrypt_file(f, output=out_fname, passphrase=pp)
         os.popen('rm ' + tmp_fname)
     
-    def prep_file_for_storage(self, filename, char_lim):
+    def prep_file_for_storage(self, filename):
         encrypted_file = self.encrypt(filename).data
-        fs = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], char_lim)
+        fs = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], self.char_lim)
         return fs
+
+    def file_block_size(self, filename):
+        return len(self.prep_file_for_storage(filename))
     
     def store_file(self, filename, s_filename=None):
-        p_f = self.prep_file_for_storage(filename, 900)
+        p_f = self.prep_file_for_storage(filename)
         print('file will be stored in ' + str(len(p_f)) + ' blocks')
         for i in p_f:
             self.t.send_message(self.mid, i)
