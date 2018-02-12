@@ -41,34 +41,32 @@ class TinderStorage(object):
             self.gpg.decrypt_file(f, output=out_fname, passphrase=pp)
         os.popen('rm ' + tmp_fname)
     
-    def prep_file_for_storage(self, filename):
+    def prep_file_for_storage(self, filename, s_filename=None):
         encrypted_file = self.encrypt(filename).data
         fs = self.sp(str(base64.b85encode(encrypted_file))[2::][:-1:], self.char_lim)
+        if s_filename != None: filename = s_filename
+        info_tag = str(len(fs)) + ' ' + filename
+        fs.append(str(base64.b85encode(self.gpg.encrypt(info_tag, self.key_id, always_trust=True).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:])
         return fs
 
     def file_block_size(self, filename):
         return len(self.prep_file_for_storage(filename))
     
     def store_file(self, filename, s_filename=None):
-        p_f = self.prep_file_for_storage(filename)
-        print('file will be stored in ' + str(len(p_f)) + ' blocks')
+        p_f = self.prep_file_for_storage(filename, s_filename)
+        print('file will be stored in ' + str(len(p_f)-1) + ' blocks')
         for i in p_f:
             self.t.send_message(self.mid, i)
             # creating temporary message-like entries in self.convo to avoid self.update()
             self.convo.append({'message': i})
         if s_filename != None: filename = s_filename
-        info_tag = str(len(p_f)) + ' ' + filename
-        # to_send = str(base64.encodestring(self.gpg.encrypt(info_tag, self.key_id).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
-        to_send = str(base64.b85encode(self.gpg.encrypt(info_tag, self.key_id, always_trust=True).data)).encode('utf-8').decode('unicode-escape')[2::][:-1:]
-        self.t.send_message(self.mid, to_send)
-        self.convo.append({'message': to_send})
         # offset_table will be overwritten next time list_files is called
         for i in range(len(self.offset_table), 0, -1):
             self.offset_table[i] = self.offset_table[i-1]
         prev_end = -1
         if len(self.offset_table) > 1:
             prev_end = self.offset_table[1][2]
-        self.offset_table[0] = (filename, prev_end+1, len(p_f)+prev_end+1)
+        self.offset_table[0] = (filename, prev_end+1, len(p_f)+prev_end)
     
     # TODO: only look at messages sent by user
     # could be difficult because i'd have to t.get_my_profile
