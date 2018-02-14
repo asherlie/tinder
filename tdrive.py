@@ -85,7 +85,7 @@ class TinderStorage(object):
         except ValueError:
             return -1
 
-    def load_file(self, filenum, out_fname=None):
+    def load_file(self, filenum, out_fname=None, called_rec=False):
         def block_range_to_data_str(c_b, c_e, o_fn):
             data_str = ''
             print('loading file \'' + o_fn + '\' from block ' + str(c_b) + ' to ' + str(c_e))
@@ -103,6 +103,11 @@ class TinderStorage(object):
             unb64 = base64.b85decode(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
             self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
             return
+        if self.convo != [] and not called_rec:
+            # if we haven't generated an offset table yet or tried to unsuccesfully, which would be indicated by called_rec, do so 
+            self.list_files(True, False)
+            # call load_file recursively to load file from new offset_table
+            self.load_file(filenum, out_fname, True)
 
     def list_files(self, silent=False, use_ot=True):
         if use_ot and self.offset_table != {}:
