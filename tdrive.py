@@ -85,8 +85,7 @@ class TinderStorage(object):
         except ValueError:
             return -1
 
-    def load_file(self, filenum, out_fname=None, use_ot=True):
-        # TODO: get rid of original implementation - load_file should only be called when there is an offset table
+    def load_file(self, filenum, out_fname=None):
         def block_range_to_data_str(c_b, c_e, o_fn):
             data_str = ''
             print('loading file \'' + o_fn + '\' from block ' + str(c_b) + ' to ' + str(c_e))
@@ -99,38 +98,11 @@ class TinderStorage(object):
                 data_str += clean_msg
             return data_str
 
-        if use_ot and self.offset_table != {}:
+        if self.offset_table != {}:
             if out_fname == None: out_fname = self.offset_table[filenum][0]
-            # unb64 = base64.decodestring(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
             unb64 = base64.b85decode(bytes(block_range_to_data_str(self.offset_table[filenum][1], self.offset_table[filenum][2], self.offset_table[filenum][0]), 'utf-8').decode('unicode-escape').encode('utf-8'))
             self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
             return
-        data_str = ''
-        c = 0
-        msg = len(self.convo)-1
-        while msg >= 0:
-            # tmp_decoded = self.b64_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
-            tmp_decoded = self.b85_decode_safe(bytes(self.convo[msg]['message'], 'utf-8'))
-            if tmp_decoded != -1:
-                tmp_decrypted = self.gpg.decrypt(tmp_decoded, passphrase=self.pgp_pp)
-                if tmp_decrypted.data != b'':
-                    if tmp_decrypted.data.decode().split(' ')[0].isnumeric():
-                        n_blocks = int(tmp_decrypted.data.decode().split(' ')[0])
-                        o_fname = tmp_decrypted.data.decode()[len(str(n_blocks))+1::]
-                        if filenum == c: # if we've gotten to the correct file
-                            if out_fname == None: out_fname = o_fname
-                            range_st = msg-n_blocks  # -1 ?
-                            data_str = block_range_to_data_str(range_st, msg, o_fname)
-                            break
-                        # filenum != c but we found a valid descriptor block
-                        else:
-                            msg -= n_blocks
-                        c += 1
-            msg -= 1
-
-        # unb64 = base64.decodestring(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
-        unb64 = base64.b85decode(bytes(data_str, 'utf-8').decode('unicode-escape').encode('utf-8'))
-        self.decrypt(unb64, '.tmp_encrypted_file.gpg', out_fname, self.pgp_pp)
 
     def list_files(self, silent=False, use_ot=True):
         if use_ot and self.offset_table != {}:
